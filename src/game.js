@@ -2,7 +2,9 @@ const ROWS = 6;
 const COLS = 5;
 const HAND_SIZE = 3;
 const BENCH_LIMIT = 4;
-const STOCK_PER_UNIT = 4;
+const STOCK_PER_UNIT = 6;
+const MAX_STAR = 3;
+const COPIES_FOR_MAX_STAR = 4;
 const PREP_LIMIT_SECONDS = 45;
 const ROUND_LIMIT_SECONDS = 35;
 const BASE_ROUND_ELIXIR = 10;
@@ -79,7 +81,7 @@ const translations = {
     matchLost: "Match lost.",
     revived: "All surviving roster slots refresh for the next round.",
     dragHint: "Drag bench units to the board, or tap bench then tap a cell.",
-    statusCap: "Shops are private, but inventory is shared: each unit has 4 total copies.",
+    statusCap: "Shops are private, but inventory is shared: each unit has 6 total copies.",
   },
   ja: {
     tagline: "\u500b\u5225\u30b7\u30e7\u30c3\u30d7\u578bPvP\u30aa\u30fc\u30c8\u30d0\u30c8\u30e9\u30fc\u8a66\u4f5c",
@@ -147,7 +149,7 @@ const translations = {
     matchLost: "\u30de\u30c3\u30c1\u6557\u5317\u3002",
     revived: "\u6b21\u30e9\u30a6\u30f3\u30c9\u3067\u5168\u30e6\u30cb\u30c3\u30c8\u306f\u5fa9\u6d3b\u3002",
     dragHint: "\u30d9\u30f3\u30c1\u304b\u3089\u76e4\u9762\u3078\u30c9\u30e9\u30c3\u30b0\u3002\u30bf\u30c3\u30d7\u9078\u629e\u3067\u3082\u914d\u7f6e\u53ef\u3002",
-    statusCap: "\u30b7\u30e7\u30c3\u30d7\u306f\u5225\u3001\u5728\u5eab\u306f\u5171\u6709\u3002\u5404\u30e6\u30cb\u30c3\u30c8\u306f\u4e21\u9663\u55b6\u5408\u8a084\u4f53\u3002",
+    statusCap: "\u30b7\u30e7\u30c3\u30d7\u306f\u5225\u3001\u5728\u5eab\u306f\u5171\u6709\u3002\u5404\u30e6\u30cb\u30c3\u30c8\u306f\u4e21\u9663\u55b6\u5408\u8a086\u4f53\u3002",
   },
   zh: {
     tagline: "\u72ec\u7acb\u5546\u5e97PvP\u81ea\u52a8\u6218\u6597\u539f\u578b",
@@ -215,7 +217,7 @@ const translations = {
     matchLost: "\u6bd4\u8d5b\u5931\u8d25\u3002",
     revived: "\u4e0b\u4e00\u56de\u5408\u6240\u6709\u5355\u4f4d\u590d\u6d3b\u3002",
     dragHint: "\u4ece\u5907\u6218\u62d6\u5230\u6218\u573a\uff0c\u4e5f\u53ef\u70b9\u9009\u540e\u653e\u7f6e\u3002",
-    statusCap: "\u5546\u5e97\u72ec\u7acb\uff0c\u5e93\u5b58\u5171\u4eab\uff1a\u6bcf\u4e2a\u5355\u4f4d\u53cc\u65b9\u5408\u8ba14\u4efd\u3002",
+    statusCap: "\u5546\u5e97\u72ec\u7acb\uff0c\u5e93\u5b58\u5171\u4eab\uff1a\u6bcf\u4e2a\u5355\u4f4d\u53cc\u65b9\u5408\u8ba16\u4efd\u3002",
   },
 };
 
@@ -662,7 +664,7 @@ function drawHands() {
 }
 
 function randomHand(owner) {
-  const available = catalog.filter((unit) => stockAvailableForShop(owner, unit.id) > 0);
+  const available = catalog.filter((unit) => canOfferShopUnit(owner, unit.id));
   const shuffled = [...available].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, HAND_SIZE).map((unit) => unit.id);
 }
@@ -720,7 +722,7 @@ function botDraft() {
   state.enemyElixir -= unit.cost;
   const mergeTarget = findMergeTarget("enemy", unit.id);
   if (mergeTarget) {
-    mergeTarget.star += 1;
+    addUnitCopy(mergeTarget);
   } else {
     const position = enemyAutoPosition(unit);
     state.enemyBench.push(createBenchUnit(unit.id, "enemy", position?.row ?? null, position?.col ?? null));
@@ -746,6 +748,7 @@ function createBenchUnit(id, team, row = null, col = null) {
     row,
     col,
     star: 1,
+    copies: 1,
   };
 }
 
@@ -768,7 +771,7 @@ function buyUnit(unitId, preferredPosition = null) {
   }
   state.playerElixir -= unit.cost;
   if (mergeTarget) {
-    mergeTarget.star += 1;
+    addUnitCopy(mergeTarget);
   } else {
     state.playerBench.push(createBenchUnit(unit.id, "player", position?.row ?? null, position?.col ?? null));
   }
@@ -800,7 +803,7 @@ function getSelectedUnit() {
 
 function getSellValue(unit) {
   const template = unitById.get(unit.id);
-  return Math.ceil((template.cost * (unit.star || 1)) / 2);
+  return Math.ceil((template.cost * getUnitCopies(unit)) / 2);
 }
 
 function resolvePurchasePosition(unit, preferredPosition) {
@@ -859,7 +862,7 @@ function autoPlaceMissingUnits() {
 
 function createFighter(unit, synergyIds) {
   const template = unitById.get(unit.id);
-  const star = unit.star || 1;
+  const star = getUnitStar(unit);
   let maxHp = Math.round(template.hp * (1 + (star - 1) * 0.34));
   let damage = Math.round(template.damage * (1 + (star - 1) * 0.28));
   let attackInterval = (template.attackMs / 1000) * Math.max(0.74, 1 - (star - 1) * 0.05);
@@ -870,6 +873,8 @@ function createFighter(unit, synergyIds) {
 
   return {
     ...unit,
+    copies: getUnitCopies(unit),
+    star,
     synergyIds,
     alive: true,
     maxHp,
@@ -1229,9 +1234,9 @@ function renderBenchSide(container, bench, owner) {
       });
       card.addEventListener("pointerdown", (event) => beginPointerDrag(event, unit.uid));
     }
-    card.append(renderCharacter(unitById.get(unit.id), "tiny", unit.star));
+    card.append(renderCharacter(unitById.get(unit.id), "tiny", getUnitStar(unit)));
     const label = document.createElement("small");
-    label.textContent = `${unitName(unitById.get(unit.id))} ${t("level")}${unit.star || 1}`;
+    label.textContent = `${unitName(unitById.get(unit.id))} ${unitLevelText(unit)}`;
     card.append(label);
     container.append(card);
   }
@@ -1305,10 +1310,11 @@ function renderUnitToken(unit) {
   }
   if (unit.shield > 0) token.classList.add("shielded");
   if (unit.fx && unit.fxUntil > state.battleTime) token.classList.add(unit.fx);
-  token.append(renderCharacter(template, "tiny", unit.star));
+  const starLevel = getUnitStar(unit);
+  token.append(renderCharacter(template, "tiny", starLevel));
   const name = document.createElement("div");
   name.className = "name";
-  name.textContent = `${unitName(template)} ${t("level")}${unit.star || 1}`;
+  name.textContent = `${unitName(template)} ${unitLevelText(unit)}`;
   const hp = document.createElement("div");
   hp.className = "hp";
   const fill = document.createElement("span");
@@ -1318,14 +1324,14 @@ function renderUnitToken(unit) {
   hp.append(fill);
   const star = document.createElement("span");
   star.className = "star-badge";
-  star.textContent = `${t("level")}${unit.star || 1}`;
+  star.textContent = `${t("level")}${starLevel}`;
   token.append(star, name, hp);
   return token;
 }
 
 function renderCharacter(unit, size = "", star = 1) {
   const character = document.createElement("div");
-  character.className = `character unit-${unit.id} ${size} star-${Math.min(STOCK_PER_UNIT, star || 1)}`.trim();
+  character.className = `character unit-${unit.id} ${size} star-${Math.min(MAX_STAR, star || 1)}`.trim();
   character.style.setProperty("--unit-color", unit.color);
   character.style.setProperty("--unit-dark", unit.dark);
   ["aura", "cape", "body", "head", "helm", "arm left", "arm right", "offhand", "weapon", "sigil", "sparkle"].forEach((part) => {
@@ -1616,8 +1622,37 @@ function rosterFor(owner) {
   return owner === "enemy" ? state.enemyBench : state.playerBench;
 }
 
+function getUnitCopies(unit) {
+  return Math.max(1, Math.min(COPIES_FOR_MAX_STAR, unit.copies ?? unit.star ?? 1));
+}
+
+function getUnitStar(unit) {
+  const copies = getUnitCopies(unit);
+  if (copies >= COPIES_FOR_MAX_STAR) return MAX_STAR;
+  if (copies >= 2) return 2;
+  return 1;
+}
+
+function unitLevelText(unit) {
+  return `${t("level")}${getUnitStar(unit)} (${getUnitCopies(unit)}/${COPIES_FOR_MAX_STAR})`;
+}
+
+function addUnitCopy(unit) {
+  unit.copies = Math.min(COPIES_FOR_MAX_STAR, getUnitCopies(unit) + 1);
+  unit.star = getUnitStar(unit);
+}
+
+function canOfferShopUnit(owner, unitId) {
+  return stockAvailableForShop(owner, unitId) > 0 && canAddRosterCopy(owner, unitId);
+}
+
+function canAddRosterCopy(owner, unitId) {
+  const existing = rosterFor(owner).find((unit) => unit.id === unitId);
+  return !existing || getUnitCopies(existing) < COPIES_FOR_MAX_STAR;
+}
+
 function findMergeTarget(owner, unitId) {
-  return rosterFor(owner).find((unit) => unit.id === unitId && (unit.star || 1) < STOCK_PER_UNIT);
+  return rosterFor(owner).find((unit) => unit.id === unitId && getUnitCopies(unit) < COPIES_FOR_MAX_STAR);
 }
 
 function isRosterCellOccupied(owner, row, col, ignoredUid = null) {
@@ -1629,7 +1664,7 @@ function isRosterCellOccupied(owner, row, col, ignoredUid = null) {
 function ownedCount(unitId) {
   return [...state.playerBench, ...state.enemyBench]
     .filter((unit) => unit.id === unitId)
-    .reduce((sum, unit) => sum + (unit.star || 1), 0);
+    .reduce((sum, unit) => sum + getUnitCopies(unit), 0);
 }
 
 function stockAvailableForShop(owner, unitId) {
@@ -1642,7 +1677,7 @@ function rosterStockRemaining(unitId) {
 
 function canBuyShopUnit(owner, unitId) {
   const hand = owner === "enemy" ? state.enemyHand : state.playerHand;
-  return hand.includes(unitId) && stockAvailableForShop(owner, unitId) > 0;
+  return hand.includes(unitId) && canOfferShopUnit(owner, unitId);
 }
 
 function removeOneFromHand(hand, unitId) {
