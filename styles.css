@@ -627,6 +627,8 @@ h2 {
 .character {
   --unit-color: #6ca7ff;
   --unit-dark: #243042;
+  --portrait-x: 0%;
+  --portrait-y: 0%;
   --skin: #f1c6a4;
   height: 64px;
   isolation: isolate;
@@ -654,6 +656,77 @@ h2 {
   opacity: 0.72;
   position: absolute;
   width: 84%;
+}
+
+.portrait {
+  background-image: url("assets/unit-portraits-v1.png");
+  background-position: var(--portrait-x) var(--portrait-y);
+  background-size: 500% 200%;
+  border: 1px solid color-mix(in srgb, var(--unit-color), #ffffff 24%);
+  border-radius: 16px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+    inset 0 -12px 18px rgba(0, 0, 0, 0.26),
+    0 8px 14px rgba(0, 0, 0, 0.42),
+    0 0 16px color-mix(in srgb, var(--unit-color), transparent 40%);
+  inset: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: 4;
+}
+
+.character.has-portrait::before {
+  bottom: -5px;
+  filter: blur(2px);
+  opacity: 0.92;
+}
+
+.character.has-portrait .aura {
+  bottom: 1px;
+  height: 58px;
+  left: 3px;
+  opacity: 0.24;
+  width: 58px;
+}
+
+.character.has-portrait .body,
+.character.has-portrait .head,
+.character.has-portrait .helm,
+.character.has-portrait .arm,
+.character.has-portrait .cape {
+  display: none;
+}
+
+.character.has-portrait .weapon,
+.character.has-portrait .offhand,
+.character.has-portrait .sigil,
+.character.has-portrait .sparkle {
+  opacity: 0.18;
+}
+
+.unit-token .character.has-portrait .weapon,
+.unit-token .character.has-portrait .offhand,
+.unit-token .character.has-portrait .sigil,
+.unit-token .character.has-portrait .sparkle {
+  opacity: 0.32;
+  z-index: 8;
+}
+
+.character.has-portrait.star-2 .portrait {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.2),
+    inset 0 -12px 18px rgba(0, 0, 0, 0.22),
+    0 8px 14px rgba(0, 0, 0, 0.42),
+    0 0 20px color-mix(in srgb, var(--unit-color), transparent 24%);
+}
+
+.character.has-portrait.star-3 .portrait {
+  border-color: #f8dfa5;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.24),
+    inset 0 -12px 18px rgba(0, 0, 0, 0.2),
+    0 8px 14px rgba(0, 0, 0, 0.42),
+    0 0 24px rgba(241, 189, 88, 0.74);
 }
 
 .aura {

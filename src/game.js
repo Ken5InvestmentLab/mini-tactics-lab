@@ -484,6 +484,7 @@ const synergies = [
 ];
 
 const unitById = new Map(catalog.map((unit) => [unit.id, unit]));
+const unitPortraitIndex = new Map(catalog.map((unit, index) => [unit.id, index]));
 const synergyById = new Map(synergies.map((synergy) => [synergy.id, synergy]));
 
 const state = {
@@ -1334,6 +1335,15 @@ function renderCharacter(unit, size = "", star = 1) {
   character.className = `character unit-${unit.id} ${size} star-${Math.min(MAX_STAR, star || 1)}`.trim();
   character.style.setProperty("--unit-color", unit.color);
   character.style.setProperty("--unit-dark", unit.dark);
+  const portraitIndex = unitPortraitIndex.get(unit.id);
+  if (portraitIndex != null) {
+    character.classList.add("has-portrait");
+    character.style.setProperty("--portrait-x", `${(portraitIndex % 5) * 25}%`);
+    character.style.setProperty("--portrait-y", `${Math.floor(portraitIndex / 5) * 100}%`);
+    const portrait = document.createElement("span");
+    portrait.className = "portrait";
+    character.append(portrait);
+  }
   ["aura", "cape", "body", "head", "helm", "arm left", "arm right", "offhand", "weapon", "sigil", "sparkle"].forEach((part) => {
     const element = document.createElement("span");
     element.className = part;
