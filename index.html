@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Mini Tactics Lab</title>
+    <link rel="stylesheet" href="styles.css?v=mini-tactics-14" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">M</div>
+          <div>
+            <h1>Mini Tactics Lab</h1>
+            <p data-i18n="tagline">Shared-pool PvP auto battler prototype</p>
+          </div>
+        </div>
+
+        <div class="top-actions">
+          <div class="language-switch" aria-label="Language">
+            <button class="lang-button active" data-lang="en" type="button">EN</button>
+            <button class="lang-button" data-lang="ja" type="button">&#26085;&#26412;&#35486;</button>
+            <button class="lang-button" data-lang="zh" type="button">&#20013;&#25991;</button>
+          </div>
+          <div class="match-stats" aria-live="polite">
+            <div>
+              <span data-i18n="round">Round</span>
+              <strong id="roundLabel">1</strong>
+            </div>
+            <div>
+              <span data-i18n="score">Score</span>
+              <strong id="scoreLabel">0-0</strong>
+            </div>
+            <div>
+              <span data-i18n="elixir">Elixir</span>
+              <strong id="elixirLabel">10</strong>
+            </div>
+            <div>
+              <span data-i18n="time">Time</span>
+              <strong id="timeLabel">35.0</strong>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="layout">
+        <aside class="panel hand-panel">
+          <div class="panel-heading shop-heading">
+            <div>
+              <h2 data-i18n="yourHand">Your Hand</h2>
+              <p data-i18n="handHint">Buy from three shared units.</p>
+            </div>
+            <div class="shop-heading-actions">
+              <span id="selectionLabel">None</span>
+              <div class="shop-buttons">
+                <button id="reloadButton" class="secondary-button shop-reload-button" type="button" data-i18n="reload">
+                  Reload -1
+                </button>
+                <button id="sellButton" class="secondary-button sell-button" type="button">Sell</button>
+              </div>
+            </div>
+          </div>
+          <div id="playerHand" class="card-grid hand-grid"></div>
+        </aside>
+
+        <section class="arena-panel">
+          <div class="arena-toolbar">
+            <div>
+              <span id="phaseLabel" class="phase-label">Matchmaking</span>
+              <p id="statusLine">Find a PvP match. Bot fills in if no opponent is found.</p>
+            </div>
+            <div class="toolbar-actions">
+              <button id="matchButton" class="secondary-button" type="button" data-i18n="findMatch">
+                Find Match
+              </button>
+              <button id="fightButton" class="primary-button" type="button" data-i18n="fight">
+                Fight
+              </button>
+              <button id="resetButton" class="secondary-button" type="button" data-i18n="reset">
+                Reset
+              </button>
+            </div>
+          </div>
+
+          <div class="timer-meter" aria-hidden="true">
+            <span id="timerFill"></span>
+          </div>
+
+          <div class="board-shell">
+            <div class="board-caption enemy-caption" data-i18n="enemyTerritory">Enemy territory 3 x 5</div>
+            <div id="board" class="board" aria-label="battle board"></div>
+            <div class="board-caption player-caption" data-i18n="yourTerritory">Your territory 3 x 5</div>
+          </div>
+
+          <div class="bench-strip">
+            <div class="panel-heading compact">
+              <h2 data-i18n="bench">Bench</h2>
+              <span id="benchCountLabel">0/4</span>
+            </div>
+            <div id="bench" class="bench"></div>
+          </div>
+
+          <div class="round-summary">
+            <div>
+              <h2 data-i18n="teamState">Team State</h2>
+              <p id="teamSummary">No units bought yet.</p>
+            </div>
+            <div>
+              <h2 data-i18n="synergies">Synergies</h2>
+              <p id="synergySummary">No active synergy.</p>
+            </div>
+          </div>
+        </section>
+
+        <aside class="panel side-panel">
+          <div class="enemy-draft">
+            <div class="panel-heading">
+              <div>
+                <h2 data-i18n="enemyHand">Enemy Hand</h2>
+                <p data-i18n="enemyHint">Opponent drafts from the same unit pool.</p>
+              </div>
+              <span id="enemyDraftLabel">Bot</span>
+            </div>
+            <div id="enemyHand" class="card-grid enemy-hand"></div>
+          </div>
+
+          <div class="enemy-bench-block">
+            <div class="panel-heading compact">
+              <h2 data-i18n="enemyBench">Enemy Bench</h2>
+              <span id="enemyBenchCountLabel">0/4</span>
+            </div>
+            <div id="enemyBench" class="bench enemy-bench"></div>
+          </div>
+
+          <div class="panel-heading compact log-heading">
+            <h2 data-i18n="battleLog">Battle Log</h2>
+            <span id="clockLabel">35.0</span>
+          </div>
+          <ol id="battleLog" class="battle-log"></ol>
+        </aside>
+      </main>
+    </div>
+
+    <script src="src/game.js?v=mini-tactics-14"></script>
+  </body>
+</html>
