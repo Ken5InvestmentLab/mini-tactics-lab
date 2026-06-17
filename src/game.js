@@ -11,8 +11,8 @@ const BASE_ROUND_ELIXIR = 10;
 const ROUND_ELIXIR_GAIN = 2;
 const RELOAD_COST = 1;
 const TICK_SECONDS = 0.16;
-const WINS_TO_MATCH = 2;
-const MAX_ROUNDS = 3;
+const WINS_TO_MATCH = 3;
+const MAX_ROUNDS = 5;
 
 const translations = {
   en: {
