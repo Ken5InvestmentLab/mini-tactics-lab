@@ -1194,6 +1194,11 @@ h2 {
   z-index: 2;
 }
 
+.unit-token .character.tiny {
+  height: 58px;
+  width: 58px;
+}
+
 .unit-token .name {
   color: var(--text);
   font-size: 9px;
@@ -1952,6 +1957,11 @@ h2 {
   .character.tiny {
     height: 36px;
     width: 36px;
+  }
+
+  .unit-token .character.tiny {
+    height: 50px;
+    width: 50px;
   }
 
   .body {
